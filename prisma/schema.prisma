@@ -12,6 +12,7 @@ model Usuario {
   nombre    String
   correo    String         @unique
   foto      String?
+  activo    Boolean  @default(true)
   creadoEn  DateTime       @default(now())
 
   cuentas        Cuenta[]

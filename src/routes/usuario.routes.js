@@ -3,12 +3,15 @@ const router = express.Router();
 const {
   obtenerUsuarios,
   crearUsuario,
+  actualizarUsuario,
+  eliminarUsuario,
+  reactivarUsuario
 } = require("../controllers/usuario.controller");
 
-// GET /usuarios
-router.get("/", obtenerUsuarios);
-
-// POST /usuarios
+router.get("/", obtenerUsuarios); // paginado
 router.post("/", crearUsuario);
+router.put("/:id", actualizarUsuario);
+router.delete("/:id", eliminarUsuario);
+router.post("/reactivar/:id", reactivarUsuario); // Reactivar cuenta
 
 module.exports = router;
