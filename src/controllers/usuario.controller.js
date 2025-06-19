@@ -1,33 +1,44 @@
 const prisma = require("../prismaClient");
 
-// Obtener todos los usuarios
+// GET /usuarios
 const obtenerUsuarios = async (req, res) => {
   try {
-    const usuarios = await prisma.usuario.findMany();
+    const usuarios = await prisma.usuario.findMany({
+      orderBy: { creadoEn: "desc" },
+    });
     res.json(usuarios);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener usuarios" });
+    console.error("Error al obtener usuarios:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
-// Crear nuevo usuario (por ejemplo desde login con Google)
+// POST /usuarios
 const crearUsuario = async (req, res) => {
   const { id, nombre, correo, foto } = req.body;
 
-  try {
-    const existe = await prisma.usuario.findUnique({ where: { id } });
+  // Validaciones básicas
+  if (!id || !nombre || !correo) {
+    return res
+      .status(400)
+      .json({ error: "Faltan campos obligatorios (id, nombre, correo)" });
+  }
 
-    if (existe) {
-      return res.status(200).json(existe);
+  try {
+    const usuarioExistente = await prisma.usuario.findUnique({ where: { id } });
+
+    if (usuarioExistente) {
+      return res.status(200).json(usuarioExistente);
     }
 
-    const nuevo = await prisma.usuario.create({
+    const nuevoUsuario = await prisma.usuario.create({
       data: { id, nombre, correo, foto },
     });
 
-    res.status(201).json(nuevo);
+    res.status(201).json(nuevoUsuario);
   } catch (error) {
-    res.status(400).json({ error: "No se pudo crear el usuario" });
+    console.error("Error al crear usuario:", error);
+    res.status(500).json({ error: "No se pudo crear el usuario" });
   }
 };
 
