@@ -3,15 +3,21 @@ const router = express.Router();
 const {
   obtenerUsuarios,
   crearUsuario,
+  esCorreoValido,
   actualizarUsuario,
   eliminarUsuario,
-  reactivarUsuario
+  reactivarUsuario,
+  obtenerUsuarioAutenticado, 
 } = require("../controllers/usuario.controller");
 
-router.get("/", obtenerUsuarios); // paginado
-router.post("/", crearUsuario);
-router.put("/:id", actualizarUsuario);
-router.delete("/:id", eliminarUsuario);
-router.post("/reactivar/:id", reactivarUsuario); // Reactivar cuenta
+const autenticarGoogle = require("../middlewares/authGoogle");
+
+router.get("/me", autenticarGoogle, obtenerUsuarioAutenticado);
+router.get("/", obtenerUsuarios);
+router.post("/", autenticarGoogle, crearUsuario);
+router.post("/validar-correo", esCorreoValido);
+router.put("/:id", autenticarGoogle, actualizarUsuario);
+router.delete("/:id", autenticarGoogle, eliminarUsuario);
+router.put("/:id/reactivar", autenticarGoogle, reactivarUsuario);
 
 module.exports = router;

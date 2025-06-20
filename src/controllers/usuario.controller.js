@@ -31,19 +31,29 @@ const obtenerUsuarios = async (req, res) => {
   }
 };
 
+// GET /usuarios/me
+const obtenerUsuarioAutenticado = async (req, res) => {
+  const { id } = req.usuario;
+
+  try {
+    const usuario = await prisma.usuario.findUnique({
+      where: { id },
+    });
+
+    if (!usuario || !usuario.activo) {
+      return res.status(404).json({ error: "Usuario no encontrado o inactivo" });
+    }
+
+    res.json(usuario);
+  } catch (error) {
+    console.error("Error al obtener usuario autenticado:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
 // POST /usuarios
 const crearUsuario = async (req, res) => {
-  const { id, nombre, correo, foto } = req.body;
-
-  if (!id || !nombre || !correo) {
-    return res
-      .status(400)
-      .json({ error: "Faltan campos obligatorios (id, nombre, correo)" });
-  }
-
-  if (!esCorreoValido(correo)) {
-    return res.status(400).json({ error: "Correo inválido" });
-  }
+  const { id, nombre, correo, foto } = req.usuario;
 
   try {
     const usuarioExistente = await prisma.usuario.findUnique({ where: { id } });
@@ -53,13 +63,7 @@ const crearUsuario = async (req, res) => {
     }
 
     const nuevoUsuario = await prisma.usuario.create({
-      data: {
-        id,
-        nombre,
-        correo,
-        foto,
-        activo: true,
-      },
+      data: { id, nombre, correo, foto },
     });
 
     res.status(201).json(nuevoUsuario);
@@ -68,6 +72,7 @@ const crearUsuario = async (req, res) => {
     res.status(500).json({ error: "No se pudo crear el usuario" });
   }
 };
+
 
 // PUT /usuarios/:id
 const actualizarUsuario = async (req, res) => {
@@ -129,8 +134,10 @@ const reactivarUsuario = async (req, res) => {
 
 module.exports = {
   obtenerUsuarios,
+  esCorreoValido,
   crearUsuario,
   actualizarUsuario,
   eliminarUsuario,
-  reactivarUsuario
+  reactivarUsuario,
+  obtenerUsuarioAutenticado,
 };
