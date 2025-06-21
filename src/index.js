@@ -7,17 +7,21 @@ const categoriaRoutes = require("./routes/categoria.routes");
 const tipoMovimientoRoutes = require("./routes/tipoMovimiento.routes");
 const transaccionRoutes = require("./routes/transaccion.routes");
 const autenticarGoogle = require("./middlewares/authGoogle");
+const { answerError } = require("./utils/answers");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Rutas
-app.use("/usuarios", autenticarGoogle, usuarioRoutes);
+// Rutas protegidas
+app.use("/usuarios", usuarioRoutes);
 app.use("/cuentas", autenticarGoogle, cuentaRoutes);
 app.use("/categorias", autenticarGoogle, categoriaRoutes);
 app.use("/tipos-movimiento", autenticarGoogle, tipoMovimientoRoutes);
 app.use("/transacciones", autenticarGoogle, transaccionRoutes);
+
+// Manejo global de errores
+app.use(answerError);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

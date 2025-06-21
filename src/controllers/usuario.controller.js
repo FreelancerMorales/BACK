@@ -1,4 +1,5 @@
 const prisma = require("../prismaClient");
+const { answerOk, answerError } = require("../utils/answers");
 
 // GET /usuarios
 const obtenerUsuarios = async (req, res) => {
@@ -16,15 +17,19 @@ const obtenerUsuarios = async (req, res) => {
 
     const total = await prisma.usuario.count({ where: { activo: true } });
 
-    res.json({
-      usuarios,
-      total,
-      page,
-      totalPages: Math.ceil(total / limit),
-    });
+    return answerOk(
+      res,
+      {
+        usuarios,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      },
+      "Usuarios obtenidos correctamente"
+    );
   } catch (error) {
     console.error("obtenerUsuarios: Error:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    return answerError(res, "Error al obtener usuarios");
   }
 };
 
@@ -38,15 +43,13 @@ const obtenerUsuarioAutenticado = async (req, res) => {
     });
 
     if (!usuario || !usuario.activo) {
-      return res
-        .status(404)
-        .json({ error: "Usuario no encontrado o inactivo" });
+      return answerError(res, "Usuario no encontrado o inactivo", 404);
     }
 
-    res.json(usuario);
+    return answerOk(res, usuario, "Usuario autenticado");
   } catch (error) {
     console.error("obtenerUsuarioAutenticado: Error:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    return answerError(res, "Error al obtener usuario autenticado");
   }
 };
 
@@ -58,17 +61,17 @@ const crearUsuario = async (req, res) => {
     const usuarioExistente = await prisma.usuario.findUnique({ where: { id } });
 
     if (usuarioExistente) {
-      return res.status(200).json(usuarioExistente);
+      return answerOk(res, usuarioExistente, "Usuario ya registrado");
     }
 
     const nuevoUsuario = await prisma.usuario.create({
       data: { id, nombre, correo, foto },
     });
 
-    res.status(201).json(nuevoUsuario);
+    return answerOk(res, nuevoUsuario, "Usuario creado correctamente", 201);
   } catch (error) {
     console.error("crearUsuario: Error:", error);
-    res.status(500).json({ error: "No se pudo crear el usuario" });
+    return answerError(res, "No se pudo crear el usuario");
   }
 };
 
@@ -78,9 +81,7 @@ const actualizarUsuario = async (req, res) => {
   const { nombre, foto } = req.body;
 
   if (req.usuario.id !== id) {
-    return res
-      .status(403)
-      .json({ error: "No autorizado para modificar este usuario" });
+    return answerError(res, "No autorizado para modificar este usuario", 403);
   }
 
   try {
@@ -89,10 +90,14 @@ const actualizarUsuario = async (req, res) => {
       data: { nombre, foto },
     });
 
-    res.json(usuarioActualizado);
+    return answerOk(
+      res,
+      usuarioActualizado,
+      "Usuario actualizado correctamente"
+    );
   } catch (error) {
     console.error("actualizarUsuario: Error:", error);
-    res.status(500).json({ error: "No se pudo actualizar el usuario" });
+    return answerError(res, "No se pudo actualizar el usuario");
   }
 };
 
@@ -101,9 +106,7 @@ const eliminarUsuario = async (req, res) => {
   const { id } = req.params;
 
   if (req.usuario.id !== id) {
-    return res
-      .status(403)
-      .json({ error: "No autorizado para eliminar este usuario" });
+    return answerError(res, "No autorizado para eliminar este usuario", 403);
   }
 
   try {
@@ -112,10 +115,10 @@ const eliminarUsuario = async (req, res) => {
       data: { activo: false },
     });
 
-    res.json({ mensaje: "Usuario desactivado correctamente", usuario });
+    return answerOk(res, usuario, "Usuario desactivado correctamente");
   } catch (error) {
     console.error("eliminarUsuario: Error:", error);
-    res.status(500).json({ error: "No se pudo eliminar el usuario" });
+    return answerError(res, "No se pudo eliminar el usuario");
   }
 };
 
@@ -124,9 +127,7 @@ const reactivarUsuario = async (req, res) => {
   const { id } = req.params;
 
   if (req.usuario.id !== id) {
-    return res
-      .status(403)
-      .json({ error: "No autorizado para reactivar este usuario" });
+    return answerError(res, "No autorizado para reactivar este usuario", 403);
   }
 
   try {
@@ -135,10 +136,10 @@ const reactivarUsuario = async (req, res) => {
       data: { activo: true },
     });
 
-    res.json({ mensaje: "Usuario reactivado", usuario });
+    return answerOk(res, usuario, "Usuario reactivado correctamente");
   } catch (error) {
     console.error("reactivarUsuario: Error:", error);
-    res.status(500).json({ error: "No se pudo reactivar el usuario" });
+    return answerError(res, "No se pudo reactivar el usuario");
   }
 };
 
