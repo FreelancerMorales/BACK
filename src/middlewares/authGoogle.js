@@ -18,9 +18,7 @@ const autenticarGoogle = async (req, res, next) => {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    const payload = ticket.getPayload(); // Google data
-    // payload.sub = ID único de Google
-    // payload.email, payload.name, payload.picture
+    const payload = ticket.getPayload();
 
     req.usuario = {
       id: payload.sub,
@@ -31,7 +29,7 @@ const autenticarGoogle = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("Error al verificar token de Google:", error);
+    console.error("authGoogle: Error al verificar token de Google:", error);
     res.status(401).json({ error: "Token inválido o expirado" });
   }
 };

@@ -1,9 +1,6 @@
 const prisma = require("../prismaClient");
 
-// Validación básica de correo
-const esCorreoValido = (correo) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
-
-// GET /usuarios?limit=10&page=1
+// GET /usuarios
 const obtenerUsuarios = async (req, res) => {
   const limit = parseInt(req.query.limit) || 20;
   const page = parseInt(req.query.page) || 1;
@@ -26,7 +23,7 @@ const obtenerUsuarios = async (req, res) => {
       totalPages: Math.ceil(total / limit),
     });
   } catch (error) {
-    console.error("Error al obtener usuarios:", error);
+    console.error("obtenerUsuarios: Error:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
@@ -41,12 +38,14 @@ const obtenerUsuarioAutenticado = async (req, res) => {
     });
 
     if (!usuario || !usuario.activo) {
-      return res.status(404).json({ error: "Usuario no encontrado o inactivo" });
+      return res
+        .status(404)
+        .json({ error: "Usuario no encontrado o inactivo" });
     }
 
     res.json(usuario);
   } catch (error) {
-    console.error("Error al obtener usuario autenticado:", error);
+    console.error("obtenerUsuarioAutenticado: Error:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
@@ -68,21 +67,20 @@ const crearUsuario = async (req, res) => {
 
     res.status(201).json(nuevoUsuario);
   } catch (error) {
-    console.error("Error al crear usuario:", error);
+    console.error("crearUsuario: Error:", error);
     res.status(500).json({ error: "No se pudo crear el usuario" });
   }
 };
-
 
 // PUT /usuarios/:id
 const actualizarUsuario = async (req, res) => {
   const { id } = req.params;
   const { nombre, foto } = req.body;
 
-  if (!nombre && !foto) {
+  if (req.usuario.id !== id) {
     return res
-      .status(400)
-      .json({ error: "Se requiere al menos un campo para actualizar" });
+      .status(403)
+      .json({ error: "No autorizado para modificar este usuario" });
   }
 
   try {
@@ -93,14 +91,20 @@ const actualizarUsuario = async (req, res) => {
 
     res.json(usuarioActualizado);
   } catch (error) {
-    console.error("Error al actualizar usuario:", error);
+    console.error("actualizarUsuario: Error:", error);
     res.status(500).json({ error: "No se pudo actualizar el usuario" });
   }
 };
 
-// DELETE lógico /usuarios/:id
+// DELETE /usuarios/:id
 const eliminarUsuario = async (req, res) => {
   const { id } = req.params;
+
+  if (req.usuario.id !== id) {
+    return res
+      .status(403)
+      .json({ error: "No autorizado para eliminar este usuario" });
+  }
 
   try {
     const usuario = await prisma.usuario.update({
@@ -110,14 +114,20 @@ const eliminarUsuario = async (req, res) => {
 
     res.json({ mensaje: "Usuario desactivado correctamente", usuario });
   } catch (error) {
-    console.error("Error al eliminar usuario:", error);
+    console.error("eliminarUsuario: Error:", error);
     res.status(500).json({ error: "No se pudo eliminar el usuario" });
   }
 };
 
-// Reactivar cuenta
+// PUT /usuarios/:id/reactivar
 const reactivarUsuario = async (req, res) => {
   const { id } = req.params;
+
+  if (req.usuario.id !== id) {
+    return res
+      .status(403)
+      .json({ error: "No autorizado para reactivar este usuario" });
+  }
 
   try {
     const usuario = await prisma.usuario.update({
@@ -127,14 +137,13 @@ const reactivarUsuario = async (req, res) => {
 
     res.json({ mensaje: "Usuario reactivado", usuario });
   } catch (error) {
-    console.error("Error al reactivar usuario:", error);
+    console.error("reactivarUsuario: Error:", error);
     res.status(500).json({ error: "No se pudo reactivar el usuario" });
   }
 };
 
 module.exports = {
   obtenerUsuarios,
-  esCorreoValido,
   crearUsuario,
   actualizarUsuario,
   eliminarUsuario,
