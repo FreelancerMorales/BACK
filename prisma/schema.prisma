@@ -8,63 +8,171 @@ datasource db {
 }
 
 model Usuario {
-  id        String         @id
-  nombre    String
-  correo    String         @unique
-  foto      String?
-  activo    Boolean  @default(true)
-  creadoEn  DateTime       @default(now())
+  id             String        @id // ID único de Google
+  nombre         String
+  correo         String        @unique
+  foto           String?
+  activo         Boolean       @default(true)
+  creadoEn       DateTime      @default(now())
 
   cuentas        Cuenta[]
   categorias     Categoria[]
   transacciones  Transaccion[]
+  etiquetas      Etiqueta[]
+  plantillas     Plantilla[]
+  proyecciones   Proyeccion[]
 }
 
 model Cuenta {
-  id            Int             @id @default(autoincrement())
-  nombre        String
-  tipo          String
-  usuarioId     String
-  usuario       Usuario         @relation(fields: [usuarioId], references: [id])
-
-  transacciones Transaccion[]
+  id             Int           @id @default(autoincrement())
+  nombre         String
+  tipo           String
+  color          String?
+  montoInicial   Float?
+  usuarioId      String
+  usuario        Usuario       @relation(fields: [usuarioId], references: [id])
+  transacciones  Transaccion[]
+  plantillas     Plantilla[]
+  proyecciones   Proyeccion[]
 }
 
 model TipoMovimiento {
-  id            Int             @id @default(autoincrement())
-  nombre        String          @unique
+  id             Int           @id @default(autoincrement())
+  nombre         String        @unique // Ej: Ingreso, Egreso, Transferencia
 
   categorias     Categoria[]
   transacciones  Transaccion[]
+  plantillas     Plantilla[]
+  proyecciones   Proyeccion[]
 }
 
 model Categoria {
-  id              Int             @id @default(autoincrement())
-  nombre          String
+  id             Int           @id @default(autoincrement())
+  nombre         String
+  icono          String?
+  color          String?
+
   tipoMovimientoId Int
-  tipoMovimiento  TipoMovimiento  @relation(fields: [tipoMovimientoId], references: [id])
+  tipoMovimiento   TipoMovimiento @relation(fields: [tipoMovimientoId], references: [id])
 
-  usuarioId       String
-  usuario         Usuario         @relation(fields: [usuarioId], references: [id])
+  usuarioId      String
+  usuario        Usuario       @relation(fields: [usuarioId], references: [id])
 
-  transacciones   Transaccion[]
+  padreId        Int?
+  padre          Categoria?    @relation("Subcategorias", fields: [padreId], references: [id])
+  subcategorias  Categoria[]   @relation("Subcategorias")
+
+  transacciones  Transaccion[]
+  plantillas     Plantilla[]
+  proyecciones   Proyeccion[]
 }
 
 model Transaccion {
-  id              Int             @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   monto           Float
   descripcion     String?
-  fecha           DateTime        @default(now())
+  fecha           DateTime      @default(now())
 
   cuentaId        Int
-  cuenta          Cuenta          @relation(fields: [cuentaId], references: [id])
+  cuenta          Cuenta        @relation(fields: [cuentaId], references: [id])
 
   categoriaId     Int
-  categoria       Categoria       @relation(fields: [categoriaId], references: [id])
+  categoria       Categoria     @relation(fields: [categoriaId], references: [id])
 
   tipoMovimientoId Int
   tipoMovimiento   TipoMovimiento @relation(fields: [tipoMovimientoId], references: [id])
 
   usuarioId       String
-  usuario         Usuario         @relation(fields: [usuarioId], references: [id])
+  usuario         Usuario       @relation(fields: [usuarioId], references: [id])
+
+  tipoPagoId      Int?
+  tipoPago        TipoPago?     @relation(fields: [tipoPagoId], references: [id])
+
+  plantillaId     Int?
+  plantilla       Plantilla?    @relation(fields: [plantillaId], references: [id])
+
+  etiquetas       EtiquetaOnTransaccion[]
+}
+
+model TipoPago {
+  id             Int           @id @default(autoincrement())
+  nombre         String        @unique // Ej: Efectivo, Débito, Crédito
+  activo         Boolean       @default(true)
+
+  transacciones  Transaccion[]
+  plantillas     Plantilla[]
+  proyecciones   Proyeccion[]
+}
+
+model Etiqueta {
+  id             Int           @id @default(autoincrement())
+  nombre         String
+  color          String?
+  usuarioId      String
+  usuario        Usuario       @relation(fields: [usuarioId], references: [id])
+
+  transacciones  EtiquetaOnTransaccion[]
+  plantillas     EtiquetaOnPlantilla[]
+}
+
+model EtiquetaOnTransaccion {
+  transaccionId  Int
+  transaccion    Transaccion   @relation(fields: [transaccionId], references: [id])
+
+  etiquetaId     Int
+  etiqueta       Etiqueta      @relation(fields: [etiquetaId], references: [id])
+
+  @@id([transaccionId, etiquetaId])
+}
+
+model Plantilla {
+  id              Int           @id @default(autoincrement())
+  nombre          String
+  monto           Float
+  descripcion     String?
+
+  categoriaId     Int
+  cuentaId        Int
+  tipoMovimientoId Int
+  tipoPagoId      Int?
+  usuarioId       String
+
+  usuario         Usuario       @relation(fields: [usuarioId], references: [id])
+  cuenta          Cuenta        @relation(fields: [cuentaId], references: [id])
+  categoria       Categoria     @relation(fields: [categoriaId], references: [id])
+  tipoMovimiento  TipoMovimiento @relation(fields: [tipoMovimientoId], references: [id])
+  tipoPago        TipoPago?     @relation(fields: [tipoPagoId], references: [id])
+
+  etiquetas       EtiquetaOnPlantilla[]
+  transacciones   Transaccion[]
+}
+
+model EtiquetaOnPlantilla {
+  plantillaId     Int
+  etiquetaId      Int
+
+  plantilla       Plantilla     @relation(fields: [plantillaId], references: [id])
+  etiqueta        Etiqueta      @relation(fields: [etiquetaId], references: [id])
+
+  @@id([plantillaId, etiquetaId])
+}
+
+model Proyeccion {
+  id              Int           @id @default(autoincrement())
+  fecha           DateTime
+  monto           Float
+  descripcion     String?
+  estado          String        @default("pendiente") // pendiente | confirmada | omitida
+
+  cuentaId        Int
+  categoriaId     Int
+  tipoMovimientoId Int
+  tipoPagoId      Int?
+  usuarioId       String
+
+  usuario         Usuario       @relation(fields: [usuarioId], references: [id])
+  cuenta          Cuenta        @relation(fields: [cuentaId], references: [id])
+  categoria       Categoria     @relation(fields: [categoriaId], references: [id])
+  tipoMovimiento  TipoMovimiento @relation(fields: [tipoMovimientoId], references: [id])
+  tipoPago        TipoPago?     @relation(fields: [tipoPagoId], references: [id])
 }
