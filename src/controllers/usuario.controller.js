@@ -1,5 +1,6 @@
 const prisma = require("../prismaClient");
 const { answerOk, answerError } = require("../utils/answers");
+const clonarCategoriasDesdeSistema = require("../utils/clonarCategoriasDesdeSistema");
 
 // GET /usuarios
 const obtenerUsuarios = async (req, res) => {
@@ -68,12 +69,16 @@ const crearUsuario = async (req, res) => {
       data: { id, nombre, correo, foto },
     });
 
+    // Clonar categorías base solo después de crear el usuario
+    await clonarCategoriasDesdeSistema(nuevoUsuario.id);
+
     return answerOk(res, nuevoUsuario, "Usuario creado correctamente", 201);
   } catch (error) {
     console.error("crearUsuario: Error:", error);
     return answerError(res, "No se pudo crear el usuario");
   }
 };
+
 
 // PUT /usuarios/:id
 const actualizarUsuario = async (req, res) => {

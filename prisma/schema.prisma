@@ -65,6 +65,7 @@ model Categoria {
   transacciones  Transaccion[]
   plantillas     Plantilla[]
   proyecciones   Proyeccion[]
+  @@unique([nombre, usuarioId])
 }
 
 model Transaccion {
