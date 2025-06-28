@@ -29,7 +29,7 @@ const obtenerUsuarios = async (req, res) => {
       "Usuarios obtenidos correctamente"
     );
   } catch (error) {
-    console.error("obtenerUsuarios: Error:", error);
+    console.error(`obtenerUsuarios: Error para usuario ${req.usuario.id}:`, error);
     return answerError(res, "Error al obtener usuarios");
   }
 };
