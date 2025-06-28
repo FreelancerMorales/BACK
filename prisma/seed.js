@@ -53,56 +53,119 @@ async function main() {
 
   const usuarioSistema = "sistema";
 
-  // Categorías base
+  // Categorías base de ingreso
   const categoriasIngreso = [
-    { nombre: "Salario", color: "#22c55e", icono: "💼" },
-    { nombre: "Ventas", color: "#14b8a6", icono: "🛍️" },
-    { nombre: "Reembolsos", color: "#3b82f6", icono: "💸" },
-    { nombre: "Intereses", color: "#7c3aed", icono: "📈" },
+    { nombre: "Salario", color: "#22c55e", icono: "FaBriefcase" },
+    { nombre: "Ventas", color: "#14b8a6", icono: "FaShoppingBag" },
+    { nombre: "Reembolsos", color: "#3b82f6", icono: "FaMoneyBillWave" },
+    { nombre: "Intereses", color: "#7c3aed", icono: "FaChartLine" },
+    { nombre: "Premios", color: "#16a34a", icono: "FaAward" },
+    { nombre: "Regalos Recibidos", color: "#0ea5e9", icono: "FaGift" },
+    { nombre: "Alquiler Recibido", color: "#0d9488", icono: "FaHome" },
   ];
 
+  // Categorías base de egreso con subcategorías
   const categoriasEgreso = [
     {
       nombre: "Comida",
       color: "#f87171",
-      icono: "🍔",
-      subcategorias: ["Restaurante", "Supermercado", "Snacks"],
+      icono: "FaUtensils",
+      subcategorias: [
+        "Restaurante",
+        "Supermercado",
+        "Snacks",
+        "Bebidas",
+        "Desayunos",
+      ],
     },
     {
       nombre: "Transporte",
       color: "#60a5fa",
-      icono: "🚗",
-      subcategorias: ["Combustible", "Taxi", "Mantenimiento"],
+      icono: "FaCar",
+      subcategorias: [
+        "Combustible",
+        "Taxi",
+        "Mantenimiento",
+        "Parqueo",
+        "Transporte Público",
+      ],
     },
     {
       nombre: "Hogar",
       color: "#fbbf24",
-      icono: "🏠",
-      subcategorias: ["Renta", "Servicios", "Mobiliario"],
+      icono: "FaHome",
+      subcategorias: [
+        "Renta",
+        "Servicios (agua, luz, etc.)",
+        "Mobiliario",
+        "Reparaciones",
+        "Internet/Cable",
+      ],
     },
     {
       nombre: "Salud",
       color: "#f472b6",
-      icono: "🩺",
-      subcategorias: ["Medicinas", "Consultas"],
+      icono: "FaHeartbeat",
+      subcategorias: ["Medicinas", "Consultas", "Seguro Médico", "Dentista"],
     },
     {
       nombre: "Educación",
       color: "#34d399",
-      icono: "📚",
-      subcategorias: ["Universidad", "Cursos"],
+      icono: "FaBook",
+      subcategorias: ["Universidad", "Cursos", "Materiales", "Libros"],
     },
     {
       nombre: "Entretenimiento",
       color: "#a78bfa",
-      icono: "🎮",
-      subcategorias: ["Cine", "Suscripciones", "Viajes"],
+      icono: "FaGamepad",
+      subcategorias: [
+        "Cine",
+        "Suscripciones (Netflix, etc.)",
+        "Viajes",
+        "Eventos",
+        "Juegos",
+      ],
     },
     {
       nombre: "Compras",
       color: "#fb923c",
-      icono: "🛒",
-      subcategorias: ["Ropa", "Tecnología", "Regalos"],
+      icono: "FaShoppingCart",
+      subcategorias: [
+        "Ropa",
+        "Tecnología",
+        "Regalos",
+        "Electrodomésticos",
+        "Decoración",
+      ],
+    },
+    {
+      nombre: "Mascotas",
+      color: "#facc15",
+      icono: "FaPaw",
+      subcategorias: ["Alimentos", "Veterinario", "Juguetes", "Baño/Cuidado"],
+    },
+    {
+      nombre: "Finanzas",
+      color: "#94a3b8",
+      icono: "FaWallet",
+      subcategorias: [
+        "Pagos Tarjeta Crédito",
+        "Préstamos",
+        "Intereses",
+        "Ahorro",
+      ],
+    },
+    {
+      nombre: "Donaciones",
+      color: "#10b981",
+      icono: "FaHandHoldingHeart",
+      subcategorias: ["Iglesia", "ONGs", "Ayuda a Familia/Amigos"],
+    },
+    {
+      nombre: "Otros",
+      color: "#cbd5e1",
+      icono: "FaEllipsisH",
+      subcategorias: ["Varios", "Imprevistos", "Multas", "Cargos Bancarios"],
     },
   ];
 
