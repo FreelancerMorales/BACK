@@ -18,8 +18,6 @@ const {
   manejarErroresValidacion,
 } = require("../validators/cuenta.validator");
 
-router.use(autenticarGoogle);
-
 router.get("/", obtenerCuentas);
 router.get("/:id/saldo", obtenerSaldoCuenta);
 router.get("/:id", obtenerCuentaPorId);

@@ -7,7 +7,7 @@ const categoriaRoutes = require("./routes/categoria.routes");
 const tipoMovimientoRoutes = require("./routes/tipoMovimiento.routes");
 const transaccionRoutes = require("./routes/transaccion.routes");
 const autenticarGoogle = require("./middlewares/authGoogle");
-const { answerError } = require("./utils/answers");
+const handlingError = require("./middlewares/handlingError");
 
 const app = express();
 app.use(cors());
@@ -21,7 +21,7 @@ app.use("/tipos-movimiento", autenticarGoogle, tipoMovimientoRoutes);
 app.use("/transacciones", autenticarGoogle, transaccionRoutes);
 
 // Manejo global de errores
-app.use(answerError);
+app.use(handlingError);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

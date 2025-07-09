@@ -8,19 +8,15 @@ const validarCuenta = [
   body("tipo")
     .isString()
     .notEmpty()
-    .withMessage("El tipo de cuenta es obligatorio"),
-  body("color")
-    .optional()
-    .isString()
-    .withMessage("El color debe ser una cadena"),
-  body("montoInicial")
-    .optional()
-    .isFloat({ min: 0 })
-    .withMessage("El monto inicial debe ser un número positivo"),
+    .withMessage("Tipo de cuenta vacio o inválido"),
   body("color")
     .optional()
     .matches(/^#[0-9A-F]{6}$/i)
     .withMessage("El color debe ser un código hexadecimal válido"),
+  body("montoInicial")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("El monto inicial debe ser un número positivo"),
 ];
 
 const manejarErroresValidacion = (req, res, next) => {

@@ -85,39 +85,14 @@ const obtenerCuentaPorId = async (req, res) => {
 // GET /cuentas/:id/saldo
 const obtenerSaldoCuenta = async (req, res) => {
   const cuentaId = parseInt(req.params.id);
-
-  if (isNaN(cuentaId)) {
-    return answerError(res, "ID de cuenta inválido", 400);
-  }
-
+  
   try {
-    // Obtener tipos de movimiento una sola vez
-    const tiposMovimiento = await prisma.tipoMovimiento.findMany({
-      select: { id: true, nombre: true },
-    });
-
-    const tipoIngreso = tiposMovimiento.find((t) => t.nombre === "Ingreso");
-    const tipoEgreso = tiposMovimiento.find((t) => t.nombre === "Egreso");
-
-    if (!tipoIngreso || !tipoEgreso) {
-      return answerError(
-        res,
-        "Tipos de movimiento no configurados correctamente",
-        500
-      );
-    }
-
     const cuenta = await prisma.cuenta.findUnique({
       where: { id: cuentaId },
       include: {
         transacciones: {
           where: { usuarioId: req.usuario.id },
-          select: {
-            monto: true,
-            tipoMovimientoId: true,
-            fecha: true,
-          },
-          orderBy: { fecha: "desc" },
+          include: { tipoMovimiento: true },
         },
       },
     });
@@ -132,31 +107,24 @@ const obtenerSaldoCuenta = async (req, res) => {
     let totalEgresos = 0;
 
     cuenta.transacciones.forEach((tx) => {
-      if (tx.tipoMovimientoId === tipoIngreso.id) {
+      if (tx.tipoMovimiento.nombre === "Ingreso") {
         totalIngresos += tx.monto;
-      } else if (tx.tipoMovimientoId === tipoEgreso.id) {
+      } else if (tx.tipoMovimiento.nombre === "Egreso") {
         totalEgresos += tx.monto;
       }
     });
 
     const saldo = montoInicial + totalIngresos - totalEgresos;
 
-    return answerOk(
-      res,
-      {
-        saldo: parseFloat(saldo.toFixed(2)),
-        montoInicial: parseFloat(montoInicial.toFixed(2)),
-        totalIngresos: parseFloat(totalIngresos.toFixed(2)),
-        totalEgresos: parseFloat(totalEgresos.toFixed(2)),
-        totalTransacciones: cuenta.transacciones.length,
-      },
-      "Saldo de la cuenta obtenido"
-    );
+    return answerOk(res, {
+      saldo: parseFloat(saldo.toFixed(2)),
+      montoInicial: parseFloat(montoInicial.toFixed(2)),
+      totalIngresos: parseFloat(totalIngresos.toFixed(2)),
+      totalEgresos: parseFloat(totalEgresos.toFixed(2)),
+      totalTransacciones: cuenta.transacciones.length,
+    }, "Saldo de la cuenta obtenido");
   } catch (error) {
-    console.error(
-      `obtenerSaldoCuenta: Error para usuario ${req.usuario.id}:`,
-      error
-    );
+    console.error(`obtenerSaldoCuenta: Error para usuario ${req.usuario.id}:`, error);
     return answerError(res, "Error al calcular el saldo");
   }
 };

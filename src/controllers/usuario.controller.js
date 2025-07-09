@@ -35,16 +35,27 @@ const obtenerUsuarios = async (req, res) => {
 };
 
 // GET /usuarios/me
+// En usuario.controller.js - función obtenerUsuarioAutenticado
 const obtenerUsuarioAutenticado = async (req, res) => {
   const { id } = req.usuario;
 
   try {
-    const usuario = await prisma.usuario.findUnique({
+    let usuario = await prisma.usuario.findUnique({
       where: { id },
     });
 
-    if (!usuario || !usuario.activo) {
-      return answerError(res, "Usuario no encontrado o inactivo", 404);
+    if (!usuario) {
+      const { nombre, correo, foto } = req.usuario;
+      usuario = await prisma.usuario.create({
+        data: { id, nombre, correo, foto },
+      });
+      
+      // Clonar categorías para nuevo usuario
+      await clonarCategoriasDesdeSistema(usuario.id);
+    }
+
+    if (!usuario.activo) {
+      return answerError(res, "Usuario inactivo", 403);
     }
 
     return answerOk(res, usuario, "Usuario autenticado");
