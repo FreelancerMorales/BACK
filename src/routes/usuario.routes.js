@@ -9,6 +9,7 @@ const {
   obtenerUsuarioAutenticado,
 } = require("../controllers/usuario.controller");
 
+const verificarAdmin = require("../middlewares/verificarAdmin");
 const autenticarGoogle = require("../middlewares/authGoogle");
 const {
   validarActualizacionUsuario,
@@ -16,7 +17,7 @@ const {
 } = require("../validators/usuario.validator");
 
 router.get("/me", autenticarGoogle, obtenerUsuarioAutenticado);
-router.get("/", autenticarGoogle, obtenerUsuarios);
+router.get("/", autenticarGoogle, verificarAdmin, obtenerUsuarios);
 router.post("/", autenticarGoogle, crearUsuario);
 router.put(
   "/:id",

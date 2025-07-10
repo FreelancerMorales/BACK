@@ -18,7 +18,7 @@ const {
   manejarErroresValidacion,
 } = require("../validators/categoria.validator");
 
-// Rutas públicas (ya protegidas por autenticación en index.js)
+// Rutas privadas (ya protegidas por autenticación en index.js)
 router.get("/", obtenerCategorias);
 router.get("/jerarquia", obtenerJerarquiaCategorias);
 router.get("/:id", obtenerCategoriaPorId);
