@@ -2,5 +2,7 @@
     "cSpell.words": [
         "mysql",
         "relation"
-    ]
+    ],
+    "miku.reminderViewIntervalInMinutes": 30,
+    "miku.title": "Descansa un minuto y toma agua~"
 }
