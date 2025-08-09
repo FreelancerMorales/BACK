@@ -35,7 +35,6 @@ const obtenerUsuarios = async (req, res) => {
 };
 
 // GET /usuarios/me
-// En usuario.controller.js - función obtenerUsuarioAutenticado
 const obtenerUsuarioAutenticado = async (req, res) => {
   const { id } = req.usuario;
 

@@ -1,37 +1,81 @@
 const express = require("express");
 const router = express.Router();
-
-const {
-  obtenerCategorias,
-  obtenerJerarquiaCategorias,
-  obtenerCategoriaPorId,
-  obtenerEstadisticasCategoria,
-  crearCategoria,
-  actualizarCategoria,
-  eliminarCategoria,
-} = require("../controllers/categoria.controller");
-
+const categoriaController = require("../controllers/categoria.controller");
+const categoriaValidator = require("../validators/categoria.validator");
 const autenticarGoogle = require("../middlewares/authGoogle");
+
+// Aplicar middleware de autenticación a todas las rutas
+router.use(autenticarGoogle);
+
 const {
-  validarCategoria,
-  validarActualizacionCategoria,
-  manejarErroresValidacion,
-} = require("../validators/categoria.validator");
+  validarAsignacionCategoria,
+  validarParametrosConsultaBase,
+  validarParametrosConsultaUsuario,
+  validarParametrosIconos,
+  validarIdCategoria,
+  validarCambioEstado,
+} = categoriaValidator;
 
-// Rutas privadas (ya protegidas por autenticación en index.js)
-router.get("/", obtenerCategorias);
-router.get("/jerarquia", obtenerJerarquiaCategorias);
-router.get("/:id", obtenerCategoriaPorId);
-router.get("/:id/estadisticas", obtenerEstadisticasCategoria);
-
-// Rutas que requieren validación
-router.post("/", validarCategoria, manejarErroresValidacion, crearCategoria);
-router.put(
-  "/:id",
-  validarActualizacionCategoria,
-  manejarErroresValidacion,
-  actualizarCategoria
+// GET /categorias/base - Obtener todas las categorías base disponibles
+router.get(
+  "/base",
+  validarParametrosConsultaBase,
+  categoriaController.obtenerCategoriasBase
 );
-router.delete("/:id", eliminarCategoria);
+
+// GET /categorias/jerarquicas - Obtener categorías base con estructura jerárquica
+router.get(
+  "/jerarquicas",
+  validarParametrosConsultaBase,
+  categoriaController.obtenerCategoriasJerarquicas
+);
+
+// GET /categorias/usuario - Obtener categorías del usuario
+router.get(
+  "/usuario",
+  validarParametrosConsultaUsuario,
+  categoriaController.obtenerCategoriasUsuario
+);
+
+// GET /categorias/usuario/:id - Obtener categoría de usuario por ID
+router.get(
+  "/usuario/:id",
+  validarIdCategoria,
+  categoriaController.obtenerCategoriaUsuarioPorId
+);
+
+// POST /categorias/usuario - Asignar categoría base a usuario
+router.post(
+  "/usuario",
+  validarAsignacionCategoria,
+  categoriaController.asignarCategoriaAUsuario
+);
+
+// PATCH /categorias/usuario/:id/desactivar - Desactivar categoría de usuario
+router.patch(
+  "/usuario/:id/desactivar",
+  validarCambioEstado,
+  categoriaController.desactivarCategoriaUsuario
+);
+
+// PATCH /categorias/usuario/:id/reactivar - Reactivar categoría de usuario
+router.patch(
+  "/usuario/:id/reactivar",
+  validarCambioEstado,
+  categoriaController.reactivarCategoriaUsuario
+);
+
+// GET /categorias/iconos - Obtener iconos disponibles
+router.get(
+  "/iconos",
+  validarParametrosIconos,
+  categoriaController.obtenerIconos
+);
+
+// GET /categorias/colores - Obtener colores disponibles
+router.get("/colores", categoriaController.obtenerColores);
+
+// GET /categorias/tipos-movimiento - Obtener tipos de movimiento disponibles
+router.get("/tipos-movimiento", categoriaController.obtenerTiposMovimiento);
 
 module.exports = router;

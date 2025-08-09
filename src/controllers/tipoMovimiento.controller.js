@@ -18,7 +18,6 @@ const obtenerTiposMovimiento = async (req, res) => {
           select: {
             categorias: true,
             transacciones: true,
-            plantillas: true,
             proyecciones: true,
           },
         },
@@ -62,7 +61,6 @@ const obtenerTipoMovimientoPorId = async (req, res) => {
           select: {
             categorias: true,
             transacciones: true,
-            plantillas: true,
             proyecciones: true,
           },
         },
@@ -124,7 +122,6 @@ const obtenerCategoriasPorTipo = async (req, res) => {
         _count: {
           select: {
             transacciones: true,
-            plantillas: true,
             proyecciones: true,
           },
         },
@@ -392,7 +389,6 @@ const eliminarTipoMovimiento = async (req, res) => {
           select: {
             categorias: true,
             transacciones: true,
-            plantillas: true,
             proyecciones: true,
           },
         },
@@ -407,7 +403,6 @@ const eliminarTipoMovimiento = async (req, res) => {
     const tieneRelaciones =
       tipoMovimiento._count.categorias > 0 ||
       tipoMovimiento._count.transacciones > 0 ||
-      tipoMovimiento._count.plantillas > 0 ||
       tipoMovimiento._count.proyecciones > 0;
 
     if (tieneRelaciones) {

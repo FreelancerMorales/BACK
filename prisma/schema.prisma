@@ -7,174 +7,242 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Usuario {
-  id             String        @id // ID único de Google
-  nombre         String
-  correo         String        @unique
-  foto           String?
-  activo         Boolean       @default(true)
-  creadoEn       DateTime      @default(now())
+model categoriabase {
+  id                  Int                @id @default(autoincrement())
+  nombre              String             @db.VarChar(100)
+  descripcion         String?            @db.VarChar(200)
+  orden               Int                @default(0)
+  activo              Boolean            @default(true)
+  esSubcategoria      Boolean            @default(false)
+  nivel               Int                @default(0)
+  iconoId             Int
+  colorId             Int
+  tipoMovimientoId    Int
+  padreId             Int?
+  color               color              @relation(fields: [colorId], references: [id], map: "CategoriaBase_colorId_fkey")
+  icono               icono              @relation(fields: [iconoId], references: [id], map: "CategoriaBase_iconoId_fkey")
+  categoriabase       categoriabase?     @relation("categoriabaseTocategoriabase", fields: [padreId], references: [id], map: "CategoriaBase_padreId_fkey")
+  other_categoriabase categoriabase[]    @relation("categoriabaseTocategoriabase")
+  tipomovimiento      tipomovimiento     @relation(fields: [tipoMovimientoId], references: [id], map: "CategoriaBase_tipoMovimientoId_fkey")
+  usuariocategoria    usuariocategoria[]
 
-  cuentas        Cuenta[]
-  categorias     Categoria[]
-  transacciones  Transaccion[]
-  etiquetas      Etiqueta[]
-  plantillas     Plantilla[]
-  proyecciones   Proyeccion[]
+  @@index([activo, esSubcategoria], map: "CategoriaBase_activo_esSubcategoria_idx")
+  @@index([colorId], map: "CategoriaBase_colorId_fkey")
+  @@index([iconoId], map: "CategoriaBase_iconoId_fkey")
+  @@index([nivel, orden], map: "CategoriaBase_nivel_orden_idx")
+  @@index([padreId, orden], map: "CategoriaBase_padreId_orden_idx")
+  @@index([tipoMovimientoId, activo, orden], map: "CategoriaBase_tipoMovimientoId_activo_orden_idx")
 }
 
-model Cuenta {
-  id             Int           @id @default(autoincrement())
-  nombre         String
-  tipo           String
-  color          String?
-  montoInicial   Float?
-  activo         Boolean       @default(true)
-  usuarioId      String
-  usuario        Usuario       @relation(fields: [usuarioId], references: [id])
-  transacciones  Transaccion[]
-  plantillas     Plantilla[]
-  proyecciones   Proyeccion[]
+model color {
+  id            Int             @id @default(autoincrement())
+  nombre        String          @db.VarChar(50)
+  hex           String          @unique(map: "Color_hex_key") @db.VarChar(7)
+  activo        Boolean         @default(true)
+  categoriabase categoriabase[]
+
+  @@index([activo], map: "Color_activo_idx")
 }
 
-model TipoMovimiento {
-  id             Int           @id @default(autoincrement())
-  nombre         String        @unique // Ej: Ingreso, Egreso, Transferencia
+model cuenta {
+  id            Int           @id @default(autoincrement())
+  nombre        String        @db.VarChar(100)
+  tipo          cuenta_tipo
+  color         String?       @db.VarChar(7)
+  montoInicial  Decimal       @default(0.00) @db.Decimal(15, 2)
+  usuarioId     String
+  activo        Boolean       @default(true)
+  actualizadoEn DateTime
+  creadoEn      DateTime      @default(now())
+  orden         Int           @default(0)
+  saldoActual   Decimal       @default(0.00) @db.Decimal(15, 2)
+  usuario       usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade, map: "Cuenta_usuarioId_fkey")
+  proyeccion    proyeccion[]
+  transaccion   transaccion[]
 
-  categorias     Categoria[]
-  transacciones  Transaccion[]
-  plantillas     Plantilla[]
-  proyecciones   Proyeccion[]
+  @@index([usuarioId, activo], map: "Cuenta_usuarioId_activo_idx")
+  @@index([usuarioId, orden], map: "Cuenta_usuarioId_orden_idx")
 }
 
-model Categoria {
-  id             Int           @id @default(autoincrement())
-  nombre         String
-  icono          String?
-  color          String?
+model etiqueta {
+  id                    Int                     @id @default(autoincrement())
+  nombre                String                  @db.VarChar(100)
+  color                 String?                 @db.VarChar(7)
+  usuarioId             String
+  activo                Boolean                 @default(true)
+  creadoEn              DateTime                @default(now())
+  descripcion           String?                 @db.VarChar(200)
+  usuario               usuario                 @relation(fields: [usuarioId], references: [id], onDelete: Cascade, map: "Etiqueta_usuarioId_fkey")
+  etiquetaontransaccion etiquetaontransaccion[]
 
-  tipoMovimientoId Int
-  tipoMovimiento   TipoMovimiento @relation(fields: [tipoMovimientoId], references: [id])
-
-  usuarioId      String
-  usuario        Usuario       @relation(fields: [usuarioId], references: [id])
-
-  padreId        Int?
-  padre          Categoria?    @relation("Subcategorias", fields: [padreId], references: [id])
-  subcategorias  Categoria[]   @relation("Subcategorias")
-
-  transacciones  Transaccion[]
-  plantillas     Plantilla[]
-  proyecciones   Proyeccion[]
-  @@unique([nombre, usuarioId])
+  @@unique([usuarioId, nombre], map: "Etiqueta_usuarioId_nombre_key")
+  @@index([usuarioId, activo], map: "Etiqueta_usuarioId_activo_idx")
 }
 
-model Transaccion {
-  id              Int           @id @default(autoincrement())
-  monto           Float
-  descripcion     String?
-  fecha           DateTime      @default(now())
-
-  cuentaId        Int
-  cuenta          Cuenta        @relation(fields: [cuentaId], references: [id])
-
-  categoriaId     Int
-  categoria       Categoria     @relation(fields: [categoriaId], references: [id])
-
-  tipoMovimientoId Int
-  tipoMovimiento   TipoMovimiento @relation(fields: [tipoMovimientoId], references: [id])
-
-  usuarioId       String
-  usuario         Usuario       @relation(fields: [usuarioId], references: [id])
-
-  tipoPagoId      Int?
-  tipoPago        TipoPago?     @relation(fields: [tipoPagoId], references: [id])
-
-  plantillaId     Int?
-  plantilla       Plantilla?    @relation(fields: [plantillaId], references: [id])
-
-  etiquetas       EtiquetaOnTransaccion[]
-}
-
-model TipoPago {
-  id             Int           @id @default(autoincrement())
-  nombre         String        @unique // Ej: Efectivo, Débito, Crédito
-  activo         Boolean       @default(true)
-
-  transacciones  Transaccion[]
-  plantillas     Plantilla[]
-  proyecciones   Proyeccion[]
-}
-
-model Etiqueta {
-  id             Int           @id @default(autoincrement())
-  nombre         String
-  color          String?
-  usuarioId      String
-  usuario        Usuario       @relation(fields: [usuarioId], references: [id])
-
-  transacciones  EtiquetaOnTransaccion[]
-  plantillas     EtiquetaOnPlantilla[]
-}
-
-model EtiquetaOnTransaccion {
-  transaccionId  Int
-  transaccion    Transaccion   @relation(fields: [transaccionId], references: [id])
-
-  etiquetaId     Int
-  etiqueta       Etiqueta      @relation(fields: [etiquetaId], references: [id])
+model etiquetaontransaccion {
+  transaccionId Int
+  etiquetaId    Int
+  creadoEn      DateTime    @default(now())
+  etiqueta      etiqueta    @relation(fields: [etiquetaId], references: [id], onDelete: Cascade, map: "EtiquetaOnTransaccion_etiquetaId_fkey")
+  transaccion   transaccion @relation(fields: [transaccionId], references: [id], onDelete: Cascade, map: "EtiquetaOnTransaccion_transaccionId_fkey")
 
   @@id([transaccionId, etiquetaId])
+  @@index([etiquetaId], map: "EtiquetaOnTransaccion_etiquetaId_idx")
 }
 
-model Plantilla {
-  id              Int           @id @default(autoincrement())
-  nombre          String
-  monto           Float
-  descripcion     String?
+model icono {
+  id            Int             @id @default(autoincrement())
+  nombre        String          @db.VarChar(50)
+  codigo        String          @db.VarChar(100)
+  categoria     String?         @db.VarChar(50)
+  activo        Boolean         @default(true)
+  categoriabase categoriabase[]
 
-  categoriaId     Int
-  cuentaId        Int
+  @@index([categoria, activo], map: "Icono_categoria_activo_idx")
+  @@index([nombre], map: "Icono_nombre_idx")
+}
+
+model proyeccion {
+  id                 Int               @id @default(autoincrement())
+  fecha              DateTime
+  monto              Decimal           @db.Decimal(15, 2)
+  descripcion        String?           @db.VarChar(500)
+  estado             proyeccion_estado @default(PENDIENTE)
+  cuentaId           Int
+  tipoMovimientoId   Int
+  tipoPagoId         Int?
+  usuarioId          String
+  actualizadoEn      DateTime
+  creadoEn           DateTime          @default(now())
+  diasNotificacion   Int               @default(1)
+  fechaVencimiento   DateTime?
+  frecuencia         String?           @db.VarChar(20)
+  notificar          Boolean           @default(true)
+  proximaFecha       DateTime?
+  recurrente         Boolean           @default(false)
+  titulo             String            @db.VarChar(100)
+  usuarioCategoriaId Int
+  cuenta             cuenta            @relation(fields: [cuentaId], references: [id], map: "Proyeccion_cuentaId_fkey")
+  tipomovimiento     tipomovimiento    @relation(fields: [tipoMovimientoId], references: [id], map: "Proyeccion_tipoMovimientoId_fkey")
+  tipopago           tipopago?         @relation(fields: [tipoPagoId], references: [id], map: "Proyeccion_tipoPagoId_fkey")
+  usuariocategoria   usuariocategoria  @relation(fields: [usuarioCategoriaId], references: [id], map: "Proyeccion_usuarioCategoriaId_fkey")
+  usuario            usuario           @relation(fields: [usuarioId], references: [id], onDelete: Cascade, map: "Proyeccion_usuarioId_fkey")
+
+  @@index([cuentaId, estado], map: "Proyeccion_cuentaId_estado_idx")
+  @@index([fecha, estado, notificar], map: "Proyeccion_fecha_estado_notificar_idx")
+  @@index([proximaFecha, recurrente], map: "Proyeccion_proximaFecha_recurrente_idx")
+  @@index([tipoMovimientoId], map: "Proyeccion_tipoMovimientoId_fkey")
+  @@index([tipoPagoId], map: "Proyeccion_tipoPagoId_fkey")
+  @@index([usuarioCategoriaId], map: "Proyeccion_usuarioCategoriaId_fkey")
+  @@index([usuarioId, estado, fecha], map: "Proyeccion_usuarioId_estado_fecha_idx")
+  @@index([usuarioId, fecha], map: "Proyeccion_usuarioId_fecha_idx")
+}
+
+model tipomovimiento {
+  id               Int                @id @default(autoincrement())
+  nombre           String             @unique(map: "TipoMovimiento_nombre_key") @db.VarChar(50)
+  activo           Boolean            @default(true)
+  descripcion      String?            @db.VarChar(200)
+  transferencia    Boolean            @default(false)
+  categoriabase    categoriabase[]
+  proyeccion       proyeccion[]
+  transaccion      transaccion[]
+  usuariocategoria usuariocategoria[]
+
+  @@index([activo], map: "TipoMovimiento_activo_idx")
+}
+
+model tipopago {
+  id                 Int           @id @default(autoincrement())
+  nombre             String        @unique(map: "TipoPago_nombre_key") @db.VarChar(50)
+  activo             Boolean       @default(true)
+  descripcion        String?       @db.VarChar(200)
+  orden              Int           @default(0)
+  requiereReferencia Boolean       @default(false)
+  proyeccion         proyeccion[]
+  transaccion        transaccion[]
+
+  @@index([activo, orden], map: "TipoPago_activo_orden_idx")
+}
+
+model transaccion {
+  id                    Int                     @id @default(autoincrement())
+  monto                 Decimal                 @db.Decimal(15, 2)
+  descripcion           String?                 @db.VarChar(500)
+  fecha                 DateTime                @default(now())
+  cuentaId              Int
+  tipoMovimientoId      Int
+  usuarioId             String
+  tipoPagoId            Int?
+  actualizadoEn         DateTime
+  confirmada            Boolean                 @default(true)
+  creadoEn              DateTime                @default(now())
+  notas                 String?                 @db.Text
+  usuarioCategoriaId    Int
+  etiquetaontransaccion etiquetaontransaccion[]
+  cuenta                cuenta                  @relation(fields: [cuentaId], references: [id], map: "Transaccion_cuentaId_fkey")
+  tipomovimiento        tipomovimiento          @relation(fields: [tipoMovimientoId], references: [id], map: "Transaccion_tipoMovimientoId_fkey")
+  tipopago              tipopago?               @relation(fields: [tipoPagoId], references: [id], map: "Transaccion_tipoPagoId_fkey")
+  usuariocategoria      usuariocategoria        @relation(fields: [usuarioCategoriaId], references: [id], map: "Transaccion_usuarioCategoriaId_fkey")
+  usuario               usuario                 @relation(fields: [usuarioId], references: [id], onDelete: Cascade, map: "Transaccion_usuarioId_fkey")
+
+  @@index([cuentaId, fecha], map: "Transaccion_cuentaId_fecha_idx")
+  @@index([fecha, confirmada], map: "Transaccion_fecha_confirmada_idx")
+  @@index([tipoMovimientoId, fecha], map: "Transaccion_tipoMovimientoId_fecha_idx")
+  @@index([tipoPagoId], map: "Transaccion_tipoPagoId_fkey")
+  @@index([usuarioCategoriaId, fecha], map: "Transaccion_usuarioCategoriaId_fecha_idx")
+  @@index([usuarioId, confirmada, fecha], map: "Transaccion_usuarioId_confirmada_fecha_idx")
+  @@index([usuarioId, fecha], map: "Transaccion_usuarioId_fecha_idx")
+}
+
+model usuario {
+  id               String             @id
+  nombre           String             @db.VarChar(100)
+  correo           String             @unique(map: "Usuario_correo_key") @db.VarChar(150)
+  foto             String?            @db.VarChar(500)
+  activo           Boolean            @default(true)
+  creadoEn         DateTime           @default(now())
+  actualizadoEn    DateTime
+  cuenta           cuenta[]
+  etiqueta         etiqueta[]
+  proyeccion       proyeccion[]
+  transaccion      transaccion[]
+  usuariocategoria usuariocategoria[]
+
+  @@index([activo], map: "Usuario_activo_idx")
+  @@index([correo], map: "Usuario_correo_idx")
+}
+
+model usuariocategoria {
+  id               Int            @id @default(autoincrement())
+  activo           Boolean        @default(true)
+  creadoEn         DateTime       @default(now())
+  usuarioId        String
+  categoriaBaseId  Int
   tipoMovimientoId Int
-  tipoPagoId      Int?
-  usuarioId       String
+  proyeccion       proyeccion[]
+  transaccion      transaccion[]
+  categoriabase    categoriabase  @relation(fields: [categoriaBaseId], references: [id], map: "UsuarioCategoria_categoriaBaseId_fkey")
+  tipomovimiento   tipomovimiento @relation(fields: [tipoMovimientoId], references: [id], map: "UsuarioCategoria_tipoMovimientoId_fkey")
+  usuario          usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade, map: "UsuarioCategoria_usuarioId_fkey")
 
-  usuario         Usuario       @relation(fields: [usuarioId], references: [id])
-  cuenta          Cuenta        @relation(fields: [cuentaId], references: [id])
-  categoria       Categoria     @relation(fields: [categoriaId], references: [id])
-  tipoMovimiento  TipoMovimiento @relation(fields: [tipoMovimientoId], references: [id])
-  tipoPago        TipoPago?     @relation(fields: [tipoPagoId], references: [id])
-
-  etiquetas       EtiquetaOnPlantilla[]
-  transacciones   Transaccion[]
+  @@unique([usuarioId, categoriaBaseId], map: "UsuarioCategoria_usuarioId_categoriaBaseId_key")
+  @@index([categoriaBaseId], map: "UsuarioCategoria_categoriaBaseId_idx")
+  @@index([tipoMovimientoId], map: "UsuarioCategoria_tipoMovimientoId_fkey")
+  @@index([usuarioId, tipoMovimientoId, activo], map: "UsuarioCategoria_usuarioId_tipoMovimientoId_activo_idx")
 }
 
-model EtiquetaOnPlantilla {
-  plantillaId     Int
-  etiquetaId      Int
-
-  plantilla       Plantilla     @relation(fields: [plantillaId], references: [id])
-  etiqueta        Etiqueta      @relation(fields: [etiquetaId], references: [id])
-
-  @@id([plantillaId, etiquetaId])
+enum cuenta_tipo {
+  CORRIENTE
+  AHORROS
+  CREDITO
+  EFECTIVO
+  INVERSION
 }
 
-model Proyeccion {
-  id              Int           @id @default(autoincrement())
-  fecha           DateTime
-  monto           Float
-  descripcion     String?
-  estado          String        @default("pendiente") // pendiente | confirmada | omitida
-
-  cuentaId        Int
-  categoriaId     Int
-  tipoMovimientoId Int
-  tipoPagoId      Int?
-  usuarioId       String
-
-  usuario         Usuario       @relation(fields: [usuarioId], references: [id])
-  cuenta          Cuenta        @relation(fields: [cuentaId], references: [id])
-  categoria       Categoria     @relation(fields: [categoriaId], references: [id])
-  tipoMovimiento  TipoMovimiento @relation(fields: [tipoMovimientoId], references: [id])
-  tipoPago        TipoPago?     @relation(fields: [tipoPagoId], references: [id])
+enum proyeccion_estado {
+  PENDIENTE
+  CONFIRMADA
+  OMITIDA
+  VENCIDA
 }
