@@ -1,36 +1,66 @@
 const express = require("express");
 const router = express.Router();
+const tipoMovimientoController = require("../controllers/tipoMovimiento.controller");
+const tipoMovimientoValidator = require("../validators/tipoMovimiento.validator");
+const autenticarGoogle = require("../middlewares/authGoogle");
+
+// Aplicar middleware de autenticación a todas las rutas
+router.use(autenticarGoogle);
 
 const {
-  obtenerTiposMovimiento,
-  obtenerTipoMovimientoPorId,
-  obtenerCategoriasPorTipo,
-  obtenerEstadisticasPorTipo,
-  crearTipoMovimiento,
-  actualizarTipoMovimiento,
-  eliminarTipoMovimiento,
-} = require("../controllers/tipoMovimiento.controller");
+  validarCreacion,
+  validarActualizacion,
+  validarObtenerPorId,
+  validarEliminar,
+  validarParametrosConsulta,
+} = tipoMovimientoValidator;
 
-const {
-  validarTipoMovimiento,
-  validarActualizacionTipoMovimiento,
-  manejarErroresValidacion,
-} = require("../validators/tipoMovimiento.validator");
+// GET /tipos-movimiento - Obtener todos los tipos de movimiento con filtros opcionales
+router.get(
+  "/",
+  validarParametrosConsulta,
+  tipoMovimientoController.obtenerTodos
+);
 
-// Rutas públicas (solo lectura para usuarios normales)
-router.get("/", obtenerTiposMovimiento);
-router.get("/:id", obtenerTipoMovimientoPorId);
-router.get("/:id/categorias", obtenerCategoriasPorTipo);
-router.get("/:id/estadisticas", obtenerEstadisticasPorTipo);
+// GET /tipos-movimiento/estadisticas - Obtener estadísticas de uso de tipos de movimiento
+router.get(
+  "/estadisticas",
+  tipoMovimientoController.obtenerEstadisticas
+);
 
-// Rutas administrativas (crear, actualizar, eliminar)
-const verificarAdmin = require("../middlewares/verificarAdmin");
-router.use(verificarAdmin);
+// GET /tipos-movimiento/:id - Obtener tipo de movimiento específico por ID
+router.get(
+  "/:id",
+  validarObtenerPorId,
+  tipoMovimientoController.obtenerPorId
+);
 
-// Luego las rutas
-router.post("/", validarTipoMovimiento, manejarErroresValidacion, crearTipoMovimiento);
-router.put("/:id", validarActualizacionTipoMovimiento, manejarErroresValidacion, actualizarTipoMovimiento);
-router.delete("/:id", eliminarTipoMovimiento);
+// POST /tipos-movimiento - Crear nuevo tipo de movimiento
+router.post(
+  "/",
+  validarCreacion,
+  tipoMovimientoController.crear
+);
 
+// PUT /tipos-movimiento/:id - Actualizar tipo de movimiento
+router.put(
+  "/:id",
+  validarActualizacion,
+  tipoMovimientoController.actualizar
+);
+
+// DELETE /tipos-movimiento/:id - Eliminar tipo de movimiento
+router.delete(
+  "/:id",
+  validarEliminar,
+  tipoMovimientoController.eliminar
+);
+
+// PATCH /tipos-movimiento/:id/reactivar - Reactivar tipo de movimiento
+router.patch(
+  "/:id/reactivar",
+  validarObtenerPorId,
+  tipoMovimientoController.reactivar
+);
 
 module.exports = router;
