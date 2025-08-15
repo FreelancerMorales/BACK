@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const usuarioRoutes = require("./routes/usuario.routes");
-const cuentaRoutes = require("./routes/cuenta.routes");
+const cuentaRoutes = require("./routes/cuentas.routes");
 const categoriaRoutes = require("./routes/categoria.routes");
 const tipoMovimientoRoutes = require("./routes/tipoMovimiento.routes");
 const transaccionRoutes = require("./routes/transaccion.routes");
