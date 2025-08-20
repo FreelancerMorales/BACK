@@ -7,6 +7,7 @@ const categoriaRoutes = require("./routes/categoria.routes");
 const tipoMovimientoRoutes = require("./routes/tipoMovimiento.routes");
 const tipoPagoRoutes = require("./routes/tipoPago.route");
 const etiquetaRoutes = require("./routes/etiquetas.routes");
+const proyeccionRoutes = require("./routes/proyeccion.routes");
 const transaccionRoutes = require("./routes/transaccion.routes");
 const autenticarGoogle = require("./middlewares/authGoogle");
 const handlingError = require("./middlewares/handlingError");
@@ -22,6 +23,7 @@ app.use("/categorias", autenticarGoogle, categoriaRoutes);
 app.use("/tipos-movimiento", autenticarGoogle, tipoMovimientoRoutes);
 app.use("/tipos-pago", autenticarGoogle, tipoPagoRoutes);
 app.use("/etiquetas", autenticarGoogle, etiquetaRoutes);
+app.use("/proyecciones", autenticarGoogle, proyeccionRoutes);
 app.use("/transacciones", autenticarGoogle, transaccionRoutes);
 
 // Manejo global de errores
