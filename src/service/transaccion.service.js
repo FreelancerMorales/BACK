@@ -57,7 +57,7 @@ class TransaccionService {
       let nuevoSaldo = saldoActual;
       if (tipoMovimiento.transferencia) {
         // Lógica especial si aplica
-      } else if (tipoMovimiento.nombre.toLowerCase() === "ingreso") {
+      } else if (tipoMovimiento.id === 1) {
         nuevoSaldo = saldoActual + monto;
       } else {
         nuevoSaldo = saldoActual - monto;
