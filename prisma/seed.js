@@ -5,23 +5,23 @@ async function main() {
   console.log("🌱 Iniciando seed...");
 
   // 1. Limpiar datos existentes (en orden inverso por FK)
-  await prisma.etiquetaOnTransaccion.deleteMany({});
+  await prisma.etiquetaontransaccion.deleteMany({});
   await prisma.transaccion.deleteMany({});
   await prisma.proyeccion.deleteMany({});
   await prisma.etiqueta.deleteMany({});
-  await prisma.usuarioCategoria.deleteMany({});
+  await prisma.usuariocategoria.deleteMany({});
   await prisma.cuenta.deleteMany({});
   await prisma.usuario.deleteMany({});
-  await prisma.categoriaBase.deleteMany({});
-  await prisma.tipoMovimiento.deleteMany({});
-  await prisma.tipoPago.deleteMany({});
+  await prisma.categoriabase.deleteMany({});
+  await prisma.tipomovimiento.deleteMany({});
+  await prisma.tipopago.deleteMany({});
   await prisma.color.deleteMany({});
   await prisma.icono.deleteMany({});
 
   console.log("🧹 Datos anteriores limpiados");
 
   // 2. Iconos básicos
-  const iconos = await prisma.icono.createMany({
+  await prisma.icono.createMany({
     data: [
       {
         nombre: "Dinero",
@@ -36,7 +36,7 @@ async function main() {
   });
 
   // 3. Colores básicos
-  const colores = await prisma.color.createMany({
+  await prisma.color.createMany({
     data: [
       { nombre: "Verde", hex: "#10B981" },
       { nombre: "Azul", hex: "#3B82F6" },
@@ -47,7 +47,7 @@ async function main() {
   });
 
   // 4. Tipos de movimiento
-  const tipoIngreso = await prisma.tipoMovimiento.create({
+  const tipoIngreso = await prisma.tipomovimiento.create({
     data: {
       nombre: "Ingreso",
       descripcion: "Entrada de dinero",
@@ -55,7 +55,7 @@ async function main() {
     },
   });
 
-  const tipoEgreso = await prisma.tipoMovimiento.create({
+  const tipoEgreso = await prisma.tipomovimiento.create({
     data: {
       nombre: "Egreso",
       descripcion: "Salida de dinero",
@@ -63,7 +63,7 @@ async function main() {
     },
   });
 
-  const tipoTransferencia = await prisma.tipoMovimiento.create({
+  const tipoTransferencia = await prisma.tipomovimiento.create({
     data: {
       nombre: "Transferencia",
       descripcion: "Movimiento entre cuentas",
@@ -72,7 +72,7 @@ async function main() {
   });
 
   // 5. Tipos de pago
-  const tipoPagos = await prisma.tipoPago.createMany({
+  await prisma.tipopago.createMany({
     data: [
       { nombre: "Efectivo", descripcion: "Pago en efectivo", orden: 1 },
       { nombre: "Débito", descripcion: "Tarjeta de débito", orden: 2 },
@@ -90,7 +90,7 @@ async function main() {
   const coloresCreados = await prisma.color.findMany({ take: 5 });
 
   // 6. Categorías base principales
-  const categoriaSalario = await prisma.categoriaBase.create({
+  const categoriaSalario = await prisma.categoriabase.create({
     data: {
       nombre: "Salario",
       descripcion: "Ingresos por trabajo",
@@ -102,7 +102,7 @@ async function main() {
     },
   });
 
-  const categoriaAlimentos = await prisma.categoriaBase.create({
+  const categoriaAlimentos = await prisma.categoriabase.create({
     data: {
       nombre: "Alimentación",
       descripcion: "Gastos en comida y bebidas",
@@ -114,7 +114,7 @@ async function main() {
     },
   });
 
-  const categoriaTransporte = await prisma.categoriaBase.create({
+  const categoriaTransporte = await prisma.categoriabase.create({
     data: {
       nombre: "Transporte",
       descripcion: "Gastos de movilidad",
@@ -126,8 +126,20 @@ async function main() {
     },
   });
 
+  const categoriaVivienda = await prisma.categoriabase.create({
+    data: {
+      nombre: "Vivienda",
+      descripcion: "Gastos de hogar",
+      orden: 3,
+      nivel: 0,
+      iconoId: iconosCreados[3].id, // Casa
+      colorId: coloresCreados[3].id, // Amarillo
+      tipoMovimientoId: tipoEgreso.id,
+    },
+  });
+
   // 7. Subcategoría ejemplo
-  const subcategoriaRestaurantes = await prisma.categoriaBase.create({
+  const subcategoriaRestaurantes = await prisma.categoriabase.create({
     data: {
       nombre: "Restaurantes",
       descripcion: "Comidas fuera de casa",
@@ -142,12 +154,14 @@ async function main() {
   });
 
   // 8. Usuario de prueba
+  const fechaActual = new Date();
   const usuario = await prisma.usuario.create({
     data: {
       id: "google_123456789",
       nombre: "Usuario Demo",
       correo: "demo@ejemplo.com",
       foto: "https://via.placeholder.com/150",
+      actualizadoEn: fechaActual,
     },
   });
 
@@ -161,6 +175,7 @@ async function main() {
       saldoActual: 1000.0,
       orden: 1,
       usuarioId: usuario.id,
+      actualizadoEn: fechaActual,
     },
   });
 
@@ -173,11 +188,12 @@ async function main() {
       saldoActual: 5000.0,
       orden: 2,
       usuarioId: usuario.id,
+      actualizadoEn: fechaActual,
     },
   });
 
   // 10. Asignar categorías al usuario
-  const usuarioCatSalario = await prisma.usuarioCategoria.create({
+  const usuarioCatSalario = await prisma.usuariocategoria.create({
     data: {
       usuarioId: usuario.id,
       categoriaBaseId: categoriaSalario.id,
@@ -185,7 +201,7 @@ async function main() {
     },
   });
 
-  const usuarioCatAlimentos = await prisma.usuarioCategoria.create({
+  const usuarioCatAlimentos = await prisma.usuariocategoria.create({
     data: {
       usuarioId: usuario.id,
       categoriaBaseId: categoriaAlimentos.id,
@@ -193,10 +209,18 @@ async function main() {
     },
   });
 
-  const usuarioCatTransporte = await prisma.usuarioCategoria.create({
+  const usuarioCatTransporte = await prisma.usuariocategoria.create({
     data: {
       usuarioId: usuario.id,
       categoriaBaseId: categoriaTransporte.id,
+      tipoMovimientoId: tipoEgreso.id,
+    },
+  });
+
+  const usuarioCatVivienda = await prisma.usuariocategoria.create({
+    data: {
+      usuarioId: usuario.id,
+      categoriaBaseId: categoriaVivienda.id,
       tipoMovimientoId: tipoEgreso.id,
     },
   });
@@ -212,7 +236,7 @@ async function main() {
   });
 
   // 12. Transacciones de ejemplo
-  const tipoPagoEfectivo = await prisma.tipoPago.findFirst({
+  const tipoPagoEfectivo = await prisma.tipopago.findFirst({
     where: { nombre: "Efectivo" },
   });
 
@@ -226,6 +250,7 @@ async function main() {
       tipoMovimientoId: tipoIngreso.id,
       usuarioId: usuario.id,
       tipoPagoId: tipoPagoEfectivo.id,
+      actualizadoEn: fechaActual,
     },
   });
 
@@ -240,11 +265,12 @@ async function main() {
       tipoMovimientoId: tipoEgreso.id,
       usuarioId: usuario.id,
       tipoPagoId: tipoPagoEfectivo.id,
+      actualizadoEn: fechaActual,
     },
   });
 
   // 13. Asignar etiqueta a transacción
-  await prisma.etiquetaOnTransaccion.create({
+  await prisma.etiquetaontransaccion.create({
     data: {
       transaccionId: transaccionSupermercado.id,
       etiquetaId: etiquetaUrgente.id,
@@ -263,16 +289,21 @@ async function main() {
       proximaFecha: new Date("2025-03-01"),
       diasNotificacion: 3,
       cuentaId: cuentaCorriente.id,
-      usuarioCategoriaId: usuarioCatTransporte.id, // Usando transporte como ejemplo
+      usuarioCategoriaId: usuarioCatVivienda.id,
       tipoMovimientoId: tipoEgreso.id,
       usuarioId: usuario.id,
+      actualizadoEn: fechaActual,
     },
   });
 
   // Actualizar saldos después de transacciones
+  const saldoFinal = 1000.0 + 3000.0 - 150.5;
   await prisma.cuenta.update({
     where: { id: cuentaCorriente.id },
-    data: { saldoActual: 3000.0 - 150.5 + 1000.0 }, // saldo inicial + ingreso - egreso
+    data: {
+      saldoActual: saldoFinal,
+      actualizadoEn: fechaActual,
+    },
   });
 
   console.log("✅ Seed completado exitosamente!");
@@ -282,23 +313,22 @@ async function main() {
 - 5 Colores básicos  
 - 3 Tipos de movimiento (Ingreso, Egreso, Transferencia)
 - 3 Tipos de pago (Efectivo, Débito, Crédito)
-- 4 Categorías base (1 con subcategoría)
+- 5 Categorías base (1 con subcategoría)
 - 1 Usuario demo (demo@ejemplo.com)
 - 2 Cuentas (Corriente y Ahorros)
-- 3 Categorías de usuario
+- 4 Categorías de usuario
 - 1 Etiqueta personalizada
 - 2 Transacciones de ejemplo
 - 1 Proyección recurrente
 
 🔗 Usuario ID: ${usuario.id}
-💰 Saldo final cuenta corriente: $${2849.5}
+💰 Saldo final cuenta corriente: $${saldoFinal.toFixed(2)}
 💰 Saldo cuenta ahorros: $${5000.0}
   `);
 }
 
 main()
   .then(async () => {
-    console.log("🌱 Seed completado exitosamente!");
     await prisma.$disconnect();
   })
   .catch(async (e) => {

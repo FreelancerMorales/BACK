@@ -106,6 +106,7 @@ class CuentasController {
   }
 
   // PATCH /cuentas/orden - Actualizar orden de cuentas
+  // Poco Util, omitido en el frontend
   async actualizarOrden(req, res) {
     try {
       const { ordenCuentas } = req.body;

@@ -40,7 +40,6 @@ class CategoriaService {
   async obtenerCategoriasUsuario(usuarioId, tipoMovimientoId = null) {
     const where = {
       usuarioId,
-      activo: true,
       ...(tipoMovimientoId && { tipoMovimientoId }),
     };
 
@@ -101,6 +100,20 @@ class CategoriaService {
     });
     if (!tipoMovimiento) {
       throw new Error("El tipo de movimiento no existe o no está activo");
+    }
+
+    const existe = await prisma.usuariocategoria.findFirst({
+      where: {
+        usuarioId,
+        categoriaBaseId,
+      },
+    });
+
+    if (existe) {
+      console.log(
+        "El usuario ya tiene asignada esta categoría base" + existe.id
+      );
+      throw new Error("El usuario ya tiene asignada esta categoría");
     }
 
     // Crear la relación usuario-categoría

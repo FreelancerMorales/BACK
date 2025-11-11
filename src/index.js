@@ -32,6 +32,35 @@ app.use("/transacciones", autenticarGoogle, transaccionRoutes);
 app.use(handlingError);
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+const IP = process.env.IP || "0.0.0.0";
+app.listen(PORT, IP, () => {
+  console.log(`Servidor corriendo en http://${IP}:${PORT}`);
+});
+
+
+const os = require("os");
+
+app.listen(PORT, "0.0.0.0", () => {
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+
+  Object.keys(interfaces).forEach((name) => {
+    interfaces[name].forEach((net) => {
+      if (net.family === "IPv4" && !net.internal) {
+        addresses.push(net.address);
+      }
+    });
+  });
+
+  console.log("\n🚀 ================================");
+  console.log(`   Servidor iniciado correctamente`);
+  console.log("================================");
+  console.log(`📅 Fecha: ${new Date().toLocaleString()}`);
+  console.log(`🔌 Puerto: ${PORT}`);
+  console.log(`🌐 Accesible en:`);
+  console.log(`   • Local:   http://localhost:${PORT}`);
+  addresses.forEach((addr) => {
+    console.log(`   • Red:     http://${addr}:${PORT}`);
+  });
+  console.log("================================\n");
 });

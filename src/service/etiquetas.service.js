@@ -108,12 +108,28 @@ class EtiquetaService {
       throw new Error("No se puede eliminar la etiqueta porque tiene transacciones asociadas");
     }
 
-    return await prisma.etiqueta.delete({
-      where: {
-        id: parseInt(id),
-        usuarioId,
-      },
-    });
+    // Reactivar si esta inactiva
+    if (!etiqueta.activo) {
+      return await prisma.etiqueta.update({
+        where: {
+          id: parseInt(id),
+          usuarioId,
+        },
+        data: {
+          activo: true,
+        },
+      });
+    }else {
+      return await prisma.etiqueta.update({
+        where: {
+          id: parseInt(id),
+          usuarioId,
+        },
+        data: {
+          activo: false,
+        },
+      });
+    }
   }
 
   // Obtener etiquetas con conteo de transacciones

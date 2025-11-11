@@ -226,7 +226,7 @@ model usuariocategoria {
   tipomovimiento   tipomovimiento @relation(fields: [tipoMovimientoId], references: [id], map: "UsuarioCategoria_tipoMovimientoId_fkey")
   usuario          usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade, map: "UsuarioCategoria_usuarioId_fkey")
 
-  @@unique([usuarioId, categoriaBaseId], map: "UsuarioCategoria_usuarioId_categoriaBaseId_key")
+  @@unique([usuarioId, categoriaBaseId, tipoMovimientoId], map: "UsuarioCategoria_usuarioId_categoriaBaseId_tipoMovimientoId_key")
   @@index([categoriaBaseId], map: "UsuarioCategoria_categoriaBaseId_idx")
   @@index([tipoMovimientoId], map: "UsuarioCategoria_tipoMovimientoId_fkey")
   @@index([usuarioId, tipoMovimientoId, activo], map: "UsuarioCategoria_usuarioId_tipoMovimientoId_activo_idx")

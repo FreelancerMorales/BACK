@@ -1,168 +1,123 @@
-const prisma = require("../prismaClient");
+const usuarioService = require("../service/usuario.service");
 const { answerOk, answerError } = require("../utils/answers");
-const clonarCategoriasDesdeSistema = require("../utils/clonarCategoriasDesdeSistema");
 
-// GET /usuarios
-const obtenerUsuarios = async (req, res) => {
-  const limit = parseInt(req.query.limit) || 20;
-  const page = parseInt(req.query.page) || 1;
-  const skip = (page - 1) * limit;
+class UsuarioController {
+  // POST /usuarios/auth - Crear o actualizar usuario después del login con Google
+  async autenticar(req, res) {
+    try {
+      const usuario = await usuarioService.crearOActualizar(req.usuario);
 
-  try {
-    const usuarios = await prisma.usuario.findMany({
-      where: { activo: true },
-      orderBy: { creadoEn: "desc" },
-      skip,
-      take: limit,
-    });
+      // Inicializar categorías si es un nuevo usuario
+      if (!usuario.creadoEn || new Date() - new Date(usuario.creadoEn) < 1000) {
+        await usuarioService.inicializarCategorias(usuario.id);
+      }
 
-    const total = await prisma.usuario.count({ where: { activo: true } });
-
-    return answerOk(
-      res,
-      {
-        usuarios,
-        total,
-        page,
-        totalPages: Math.ceil(total / limit),
-      },
-      "Usuarios obtenidos correctamente"
-    );
-  } catch (error) {
-    console.error(`obtenerUsuarios: Error para usuario ${req.usuario.id}:`, error);
-    return answerError(res, "Error al obtener usuarios");
-  }
-};
-
-// GET /usuarios/me
-const obtenerUsuarioAutenticado = async (req, res) => {
-  const { id } = req.usuario;
-
-  try {
-    let usuario = await prisma.usuario.findUnique({
-      where: { id },
-    });
-
-    if (!usuario) {
-      const { nombre, correo, foto } = req.usuario;
-      usuario = await prisma.usuario.create({
-        data: { id, nombre, correo, foto },
-      });
-      
-      // Clonar categorías para nuevo usuario
-      await clonarCategoriasDesdeSistema(usuario.id);
+      return answerOk(res, usuario, "Usuario autenticado exitosamente");
+    } catch (error) {
+      console.error("Error al autenticar usuario:", error);
+      return answerError(res, error.message, 400);
     }
+  }
 
-    if (!usuario.activo) {
-      return answerError(res, "Usuario inactivo", 403);
+  // GET /usuarios/perfil - Obtener perfil del usuario autenticado
+  async obtenerPerfil(req, res) {
+    try {
+      const usuario = await usuarioService.obtenerPorId(req.usuario.id);
+
+      if (!usuario) {
+        return answerError(res, "Usuario no encontrado", 404);
+      }
+
+      return answerOk(res, usuario, "Perfil obtenido exitosamente");
+    } catch (error) {
+      console.error("Error al obtener perfil:", error);
+      return answerError(res, error.message, 400);
     }
-
-    return answerOk(res, usuario, "Usuario autenticado");
-  } catch (error) {
-    console.error("obtenerUsuarioAutenticado: Error:", error);
-    return answerError(res, "Error al obtener usuario autenticado");
   }
-};
 
-// POST /usuarios
-const crearUsuario = async (req, res) => {
-  const { id, nombre, correo, foto } = req.usuario;
+  // PUT /usuarios/perfil - Actualizar perfil del usuario
+  async actualizarPerfil(req, res) {
+    try {
+      const usuario = await usuarioService.actualizar(req.usuario.id, req.body);
 
-  try {
-    const usuarioExistente = await prisma.usuario.findUnique({ where: { id } });
-
-    if (usuarioExistente) {
-      return answerOk(res, usuarioExistente, "Usuario ya registrado");
+      return answerOk(res, usuario, "Perfil actualizado exitosamente");
+    } catch (error) {
+      console.error("Error al actualizar perfil:", error);
+      return answerError(res, error.message, 400);
     }
-
-    const nuevoUsuario = await prisma.usuario.create({
-      data: { id, nombre, correo, foto },
-    });
-
-    // Clonar categorías base solo después de crear el usuario
-    await clonarCategoriasDesdeSistema(nuevoUsuario.id);
-
-    return answerOk(res, nuevoUsuario, "Usuario creado correctamente", 201);
-  } catch (error) {
-    console.error("crearUsuario: Error:", error);
-    return answerError(res, "No se pudo crear el usuario");
-  }
-};
-
-
-// PUT /usuarios/:id
-const actualizarUsuario = async (req, res) => {
-  const { id } = req.params;
-  const { nombre, foto } = req.body;
-
-  if (req.usuario.id !== id) {
-    return answerError(res, "No autorizado para modificar este usuario", 403);
   }
 
-  try {
-    const usuarioActualizado = await prisma.usuario.update({
-      where: { id },
-      data: { nombre, foto },
-    });
+  // GET /usuarios/resumen - Obtener resumen/dashboard del usuario
+  async obtenerResumen(req, res) {
+    try {
+      const resumen = await usuarioService.obtenerResumen(req.usuario.id);
 
-    return answerOk(
-      res,
-      usuarioActualizado,
-      "Usuario actualizado correctamente"
-    );
-  } catch (error) {
-    console.error("actualizarUsuario: Error:", error);
-    return answerError(res, "No se pudo actualizar el usuario");
-  }
-};
-
-// DELETE /usuarios/:id
-const eliminarUsuario = async (req, res) => {
-  const { id } = req.params;
-
-  if (req.usuario.id !== id) {
-    return answerError(res, "No autorizado para eliminar este usuario", 403);
+      return answerOk(res, resumen, "Resumen obtenido exitosamente");
+    } catch (error) {
+      console.error("Error al obtener resumen:", error);
+      return answerError(res, error.message, 400);
+    }
   }
 
-  try {
-    const usuario = await prisma.usuario.update({
-      where: { id },
-      data: { activo: false },
-    });
+  // POST /usuarios/categorias/inicializar - Inicializar categorías base
+  async inicializarCategorias(req, res) {
+    try {
+      const categorias = await usuarioService.inicializarCategorias(
+        req.usuario.id
+      );
 
-    return answerOk(res, usuario, "Usuario desactivado correctamente");
-  } catch (error) {
-    console.error("eliminarUsuario: Error:", error);
-    return answerError(res, "No se pudo eliminar el usuario");
-  }
-};
-
-// PUT /usuarios/:id/reactivar
-const reactivarUsuario = async (req, res) => {
-  const { id } = req.params;
-
-  if (req.usuario.id !== id) {
-    return answerError(res, "No autorizado para reactivar este usuario", 403);
+      return answerOk(res, categorias, "Categorías inicializadas exitosamente");
+    } catch (error) {
+      console.error("Error al inicializar categorías:", error);
+      return answerError(res, error.message, 400);
+    }
   }
 
-  try {
-    const usuario = await prisma.usuario.update({
-      where: { id },
-      data: { activo: true },
-    });
+  // GET /usuarios/estadisticas - Obtener estadísticas del usuario
+  async obtenerEstadisticas(req, res) {
+    try {
+      const { fechaInicio, fechaFin } = req.query;
 
-    return answerOk(res, usuario, "Usuario reactivado correctamente");
-  } catch (error) {
-    console.error("reactivarUsuario: Error:", error);
-    return answerError(res, "No se pudo reactivar el usuario");
+      if (!fechaInicio || !fechaFin) {
+        return answerError(res, "Fechas de inicio y fin son requeridas", 400);
+      }
+
+      const estadisticas = await usuarioService.obtenerEstadisticas(
+        req.usuario.id,
+        fechaInicio,
+        fechaFin
+      );
+
+      return answerOk(res, estadisticas, "Estadísticas obtenidas exitosamente");
+    } catch (error) {
+      console.error("Error al obtener estadísticas:", error);
+      return answerError(res, error.message, 400);
+    }
   }
-};
 
-module.exports = {
-  obtenerUsuarios,
-  crearUsuario,
-  actualizarUsuario,
-  eliminarUsuario,
-  reactivarUsuario,
-  obtenerUsuarioAutenticado,
-};
+  // PATCH /usuarios/desactivar - Desactivar cuenta de usuario
+  async desactivar(req, res) {
+    try {
+      const usuario = await usuarioService.desactivar(req.usuario.id);
+
+      return answerOk(res, usuario, "Usuario desactivado exitosamente");
+    } catch (error) {
+      console.error("Error al desactivar usuario:", error);
+      return answerError(res, error.message, 400);
+    }
+  }
+
+  // PATCH /usuarios/reactivar - Reactivar cuenta de usuario
+  async reactivar(req, res) {
+    try {
+      const usuario = await usuarioService.reactivar(req.usuario.id);
+
+      return answerOk(res, usuario, "Usuario reactivado exitosamente");
+    } catch (error) {
+      console.error("Error al reactivar usuario:", error);
+      return answerError(res, error.message, 400);
+    }
+  }
+}
+
+module.exports = new UsuarioController();
